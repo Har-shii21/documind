@@ -29,6 +29,7 @@ function App() {
     try {
       const response = await fetch('http://localhost:5000/generate-docs', {
         method: 'POST',
+ 
         body: formData,
       });
 
@@ -62,7 +63,7 @@ function App() {
       <div className="header">
         <h1>🤖 AI Documentation Generator</h1>
         <p>Upload your code — AI writes the documentation instantly</p>
-      </div>
+      </div> #projecterror
 
       <div className="upload-section">
         <div className="upload-box">
