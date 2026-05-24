@@ -1,53 +1,57 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
+from google import genai
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load env
 load_dotenv()
 
-# Initialize Flask app
+# Flask
 app = Flask(__name__)
 CORS(app)
 
-# Configure Gemini API
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# Gemini client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Load Gemini model
-model = genai.GenerativeModel("gemini-1.5-flash")
-
-# Home route
 @app.route("/")
 def home():
     return "DocuMind Backend Running!"
 
-# Generate documentation route
 @app.route("/generate-docs", methods=["POST"])
 def generate_docs():
+    try:
+        data = request.get_json()
 
-    data = request.json
+        code = data.get("code")
 
-    code = data.get("code", "")
+        prompt = f"""
+        Analyze this code and generate:
 
-    prompt = f"""
-    Analyze this code and generate:
+        1. README
+        2. Setup Instructions
+        3. Function Explanations
+        4. API Documentation
 
-    1. Project README
-    2. Setup Instructions
-    3. Function Explanations
-    4. API Documentation if present
+        Code:
+        {code}
+        """
 
-    Code:
-    {code}
-    """
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
 
-    response = model.generate_content(prompt)
+        return jsonify({
+            "documentation": response.text
+        })
 
-    return jsonify({
-        "documentation": response.text
-    })
+    except Exception as e:
+        print("ERROR:", str(e))
 
-# Run server
+        return jsonify({
+            "documentation": str(e)
+        }), 500
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -16,31 +16,37 @@ function App() {
   };
 
   const handleUpload = async () => {
+    if (loading) return; // Prevent multiple uploads
     if (!file) {
       alert('Please select a file first!');
       return;
     }
 
     setLoading(true);
-    
-    const formData = new FormData();
-    formData.append('code', file);
 
     try {
-      const response = await fetch('http://localhost:5000/generate-docs', {
+      const text = await file.text();
+
+      const response = await fetch('http://127.0.0.1:5000/generate-docs', {
         method: 'POST',
- 
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          code: text
+        })
       });
 
       const data = await response.json();
-      setDocumentation(data.documentation || 'Documentation generated successfully!');
+
+      setDocumentation(data.documentation);
+
     } catch (error) {
-      console.error('Error:', error);
-      setDocumentation('Error connecting to backend. Make sure your teammate\'s server is running on port 5000');
-    } finally {
-      setLoading(false);
+      console.log(error);
+      setDocumentation('❌ Backend error');
     }
+
+    setLoading(false);
   };
 
   const copyToClipboard = () => {
@@ -63,7 +69,7 @@ function App() {
       <div className="header">
         <h1>🤖 AI Documentation Generator</h1>
         <p>Upload your code — AI writes the documentation instantly</p>
-      </div> #projecterror
+      </div>
 
       <div className="upload-section">
         <div className="upload-box">
@@ -105,6 +111,7 @@ function App() {
               <button onClick={downloadMarkdown} className="download-btn">💾 Download .md</button>
             </div>
           </div>
+
           <div className="docs-content">
             <pre>{documentation}</pre>
           </div>
